@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>スイカゲーム完全版</title>
+    <title>おちものぱずる</title>
     <style>
         /* 全体のリセットとレイアウト設定 */
         html, body {
@@ -64,7 +64,7 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
-        /* --- 3. 下部フッター (シンカの輪) --- */
+        /* --- 3. 下部フッター (成長ライン) --- */
         #ui-footer {
             flex: 0 0 110px; /* 高さ固定 */
             width: 95%; margin: 5px auto 0 auto;
@@ -102,7 +102,7 @@
     </div>
 
     <div id="ui-footer">
-        <div class="footer-label">シンカの輪</div>
+        <div class="footer-label">成長ライン</div>
         <canvas id="evolution-ring-canvas" width="300" height="80"></canvas>
     </div>
 </div>
@@ -122,7 +122,7 @@
           Events = Matter.Events,
           World = Matter.World;
 
-    // フルーツ定義
+    // カラフルボール定義
     const FRUITS = [
         { label: 'cherry', radius: 15, baseColor: '#F00',   highlight: '#F55', shadow: '#C00' },      
         { label: 'strawberry', radius: 25, baseColor: '#FF5555', highlight: '#FF8888', shadow: '#DD3333' },
@@ -209,7 +209,7 @@
         nextRowCtx.fillText("3rd", 140, 10);
     }
 
-    // フッターのシンカの輪描画（横長キャンバスに円環または直線配置）
+    // フッターの成長ライン描画（横長キャンバスに円環または直線配置）
     // スマホの縦画面で円は小さいので、今回は「U字」または「横並び円弧」にして見やすくします
     function drawEvolutionRing(highlightIndex = -1) {
         ringCtx.clearRect(0, 0, ringCanvas.width, ringCanvas.height);
@@ -245,7 +245,7 @@
                 ringCtx.fillStyle = 'rgba(0,255,0,0.3)'; ringCtx.fill();
             }
 
-            // フルーツ本体（小さく）
+            // カラフルボール本体（小さく）
             drawFruitShape(ringCtx, x, y, 10 + i * 0.8, f); // ランクが上がると少し大きく表示
         });
     }
@@ -315,7 +315,7 @@
                     });
                     World.add(world, newBody);
                     score += (index + 1) * 10;
-                    drawEvolutionRing(newIndex); // 進化したフルーツをハイライト
+                    drawEvolutionRing(newIndex); // 進化したカラフルボールをハイライト
                 } else {
                     score += 500; 
                 }
