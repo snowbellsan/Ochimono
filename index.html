@@ -3,94 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>おちものぱずる</title>
+    <title>スイカゲーム完全版</title>
     <style>
         /* 全体のリセットとレイアウト設定 */
         html, body {
             width: 100%; height: 100%; margin: 0; padding: 0;
-            overflow: hidden;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden; /* スクロール禁止 */
+            background: linear-gradient(to bottom, #a0d0f0, #f0e0c0);
             font-family: 'Arial', sans-serif;
             user-select: none; -webkit-user-select: none; touch-action: none;
             display: flex; flex-direction: column; align-items: center;
         }
-        
-        @keyframes scorePopup {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.3); color: #ffeb3b; }
-            100% { transform: scale(1); }
-        }
-        
-        .score-animate {
-            animation: scorePopup 0.3s ease;
-        }
 
+        /* アプリ全体のコンテナ（縦並び） */
         #app-container {
             display: flex; flex-direction: column;
             width: 100%; height: 100%;
-            max-width: 500px;
+            max-width: 500px; /* タブレットなどで横に伸びすぎないように */
             box-sizing: border-box;
             padding: 10px 0;
         }
 
+        /* --- 1. 上部ヘッダー (スコア & NEXT) --- */
         #ui-header {
-            flex: 0 0 70px;
+            flex: 0 0 70px; /* 高さ固定 */
             display: flex; justify-content: center; align-items: center;
             gap: 10px; width: 95%; margin: 0 auto 5px auto;
         }
 
         #score-box {
-            background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
-            border: 3px solid #ffb74d; border-radius: 15px;
+            background: rgba(255,255,255,0.9); border: 2px solid #8b4513; border-radius: 10px;
             flex: 1; height: 60px;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
-        #score-label { font-size: 11px; color: #666; font-weight: bold; letter-spacing: 1px; }
-        #score { font-size: 28px; font-weight: bold; color: #ff6f00; line-height: 1; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
+        #score-label { font-size: 10px; color: #555; font-weight: bold; }
+        #score { font-size: 24px; font-weight: bold; color: #d04000; line-height: 1; }
 
         #next-box {
-            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,240,240,0.9) 100%);
-            border: 3px solid #ffb74d; border-radius: 15px;
+            background: rgba(255,255,255,0.6); border: 2px solid #8b4513; border-radius: 10px;
             width: 180px; height: 60px;
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
+        /* NEXTキャンバス */
         #next-row-canvas { width: 100%; height: 100%; }
 
+        /* --- 2. 中央 ゲームエリア --- */
         #canvas-wrapper {
-            flex: 1;
+            flex: 1; /* 余ったスペースを全て使う */
             position: relative; width: 100%;
             display: flex; align-items: center; justify-content: center;
             overflow: hidden;
         }
         canvas#world {
+            /* アスペクト比2:3を維持しつつ、親要素に収める */
             max-width: 96%; max-height: 98%;
             width: auto; height: auto;
             aspect-ratio: 2 / 3;
-            border: 5px solid #ff9800; border-radius: 20px;
-            background: linear-gradient(to bottom, #fff9e6, #ffe0b2);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.5);
+            border: 4px solid #8b4513; border-radius: 15px;
+            background: linear-gradient(to bottom, #fff8e7, #e0d0b0);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
+        /* --- 3. 下部フッター (シンカの輪) --- */
         #ui-footer {
-            flex: 0 0 110px;
+            flex: 0 0 110px; /* 高さ固定 */
             width: 95%; margin: 5px auto 0 auto;
-            background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(240,240,240,0.8) 100%);
-            border: 3px solid #ffb74d; border-radius: 15px;
+            background: rgba(255,255,255,0.5);
+            border: 2px solid #8b4513; border-radius: 15px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
-        .footer-label { font-size: 13px; font-weight: bold; color: #ff6f00; margin-top: 2px; letter-spacing: 1px; }
+        .footer-label { font-size: 12px; font-weight: bold; color: #d04000; margin-top: 2px; }
         #evolution-ring-canvas { margin-bottom: 2px; }
 
+        /* ゲームオーバー画面 */
         #game-over-overlay {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, rgba(30,30,30,0.98) 0%, rgba(0,0,0,0.95) 100%);
-            color: white; padding: 40px; border-radius: 25px;
-            text-align: center; display: none; z-index: 100;
-            border: 4px solid #ff5252; width: 80%; max-width: 350px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            background: rgba(0, 0, 0, 0.9); color: white; padding: 30px; border-radius: 20px;
+            text-align: center; display: none; z-index: 100; border: 4px solid #fff; width: 80%;
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
@@ -113,7 +102,7 @@
     </div>
 
     <div id="ui-footer">
-        <div class="footer-label">成長ライン</div>
+        <div class="footer-label">シンカの輪</div>
         <canvas id="evolution-ring-canvas" width="300" height="80"></canvas>
     </div>
 </div>
@@ -121,7 +110,7 @@
 <div id="game-over-overlay">
     <h1 style="color:#ff5555; margin-top:0;">GAME OVER</h1>
     <p id="final-score" style="font-size:24px;">Score: 0</p>
-    <button onclick="location.reload()" style="padding:15px 30px; background:#4CAF50; color:white; border:none; border-radius:10px; font-size:18px; cursor:pointer;">RETRY</button>
+    <button onclick="location.reload()" style="padding:15px 30px; background:#4CAF50; color:white; border:none; border-radius:10px; font-size:18px;">RETRY</button>
 </div>
 
 <script>
@@ -133,32 +122,27 @@
           Events = Matter.Events,
           World = Matter.World;
 
-    // ゲーム定数
+    // フルーツ定義
+    const FRUITS = [
+        { label: 'cherry', radius: 15, baseColor: '#F00',   highlight: '#F55', shadow: '#C00' },      
+        { label: 'strawberry', radius: 25, baseColor: '#FF5555', highlight: '#FF8888', shadow: '#DD3333' },
+        { label: 'grape', radius: 35, baseColor: '#A0F',   highlight: '#C0F', shadow: '#80C' },      
+        { label: 'orange', radius: 45, baseColor: '#FA0',   highlight: '#FC4', shadow: '#D80' },      
+        { label: 'persimmon', radius: 55, baseColor: '#FF8800', highlight: '#FFBB33', shadow: '#DD6600' },
+        { label: 'apple', radius: 65, baseColor: '#F22',   highlight: '#F55', shadow: '#D00' },      
+        { label: 'pear', radius: 75, baseColor: '#FFD700', highlight: '#FFFF33', shadow: '#CCAA00' },       
+        { label: 'peach', radius: 85, baseColor: '#FFC0CB', highlight: '#FFDDEE', shadow: '#EEAACC' },      
+        { label: 'pineapple', radius: 95, baseColor: '#FFD700', highlight: '#FFFF33', shadow: '#CCAA00' },  
+        { label: 'melon', radius: 105, baseColor: '#90EE90', highlight: '#B0FFB0', shadow: '#70CC70' },     
+        { label: 'watermelon', radius: 120, baseColor: '#4CAF50', highlight: '#66BB6A', shadow: '#388E3C' } 
+    ];
+
     const GAME_WIDTH = 400;
     const GAME_HEIGHT = 600;
     const GAME_OVER_LINE_Y = 100;
-    const DROP_DELAY = 800;
-    const GAMEOVER_CHECK_TIME = 2000;
-    const WALL_THICKNESS = 60;
-
-    // カラフルボール定義（改善版 - より鮮やかな色）
-    const FRUITS = [
-        { label: 'cherry', radius: 15, baseColor: '#ff1744', highlight: '#ff5252', shadow: '#c51162', score: 10 },
-        { label: 'strawberry', radius: 25, baseColor: '#ff5252', highlight: '#ff8a80', shadow: '#e91e63', score: 20 },
-        { label: 'grape', radius: 35, baseColor: '#9c27b0', highlight: '#ce93d8', shadow: '#6a1b9a', score: 30 },
-        { label: 'orange', radius: 45, baseColor: '#ff9800', highlight: '#ffcc80', shadow: '#f57c00', score: 50 },
-        { label: 'persimmon', radius: 55, baseColor: '#ff6f00', highlight: '#ffab40', shadow: '#e65100', score: 80 },
-        { label: 'apple', radius: 65, baseColor: '#f44336', highlight: '#ef5350', shadow: '#d32f2f', score: 120 },
-        { label: 'pear', radius: 75, baseColor: '#fdd835', highlight: '#ffee58', shadow: '#f9a825', score: 170 },
-        { label: 'peach', radius: 85, baseColor: '#ffb3d9', highlight: '#ffd4e5', shadow: '#ff80ab', score: 230 },
-        { label: 'pineapple', radius: 95, baseColor: '#ffc107', highlight: '#ffe082', shadow: '#ffa000', score: 300 },
-        { label: 'melon', radius: 105, baseColor: '#66bb6a', highlight: '#a5d6a7', shadow: '#43a047', score: 380 },
-        { label: 'watermelon', radius: 120, baseColor: '#4caf50', highlight: '#81c784', shadow: '#388e3c', score: 500 }
-    ];
 
     const engine = Engine.create();
     const world = engine.world;
-    engine.world.gravity.y = 1.2;
 
     // キャンバス取得
     const canvas = document.getElementById('world');
@@ -168,28 +152,18 @@
     const ringCanvas = document.getElementById('evolution-ring-canvas');
     const ringCtx = ringCanvas.getContext('2d');
 
-    // 壁作成（物理パラメータ改善）
-    const ground = Bodies.rectangle(GAME_WIDTH/2, GAME_HEIGHT + 10, GAME_WIDTH + 20, WALL_THICKNESS, {
-        isStatic: true, friction: 0.8, restitution: 0.1
-    });
-    const leftWall = Bodies.rectangle(-10, GAME_HEIGHT/2, WALL_THICKNESS, GAME_HEIGHT, {
-        isStatic: true, friction: 0.8, restitution: 0.1
-    });
-    const rightWall = Bodies.rectangle(GAME_WIDTH + 10, GAME_HEIGHT/2, WALL_THICKNESS, GAME_HEIGHT, {
-        isStatic: true, friction: 0.8, restitution: 0.1
-    });
+    // 壁作成
+    const ground = Bodies.rectangle(200, 610, 410, 60, { isStatic: true, render: { fillStyle: '#8b4513' } });
+    const leftWall = Bodies.rectangle(-10, 300, 60, 600, { isStatic: true, render: { fillStyle: '#8b4513' } });
+    const rightWall = Bodies.rectangle(410, 300, 60, 600, { isStatic: true, render: { fillStyle: '#8b4513' } });
     World.add(world, [ground, leftWall, rightWall]);
 
-    // ゲーム状態
     let currentFruit = null;
     let isClickable = true;
     let isGameOver = false;
     let score = 0;
-    let nextQueue = [];
-    let particles = [];
-    let bodiesAboveLine = new Map();
+    let nextQueue = []; 
 
-    // キュー管理
     function fillQueue() {
         while(nextQueue.length < 3) {
             nextQueue.push(Math.floor(Math.random() * 3));
@@ -197,145 +171,62 @@
     }
     fillQueue();
 
-    // --- パーティクルシステム ---
-    class Particle {
-        constructor(x, y, color) {
-            this.x = x;
-            this.y = y;
-            this.vx = (Math.random() - 0.5) * 8;
-            this.vy = (Math.random() - 0.5) * 8 - 2;
-            this.life = 1.0;
-            this.color = color;
-            this.size = Math.random() * 6 + 3;
-        }
-        
-        update() {
-            this.x += this.vx;
-            this.y += this.vy;
-            this.vy += 0.3;
-            this.life -= 0.02;
-            return this.life > 0;
-        }
-        
-        draw(ctx) {
-            ctx.globalAlpha = this.life;
-            ctx.fillStyle = this.color;
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.globalAlpha = 1.0;
-        }
-    }
-
-    function createParticles(x, y, color, count = 15) {
-        for(let i = 0; i < count; i++) {
-            particles.push(new Particle(x, y, color));
-        }
-    }
-
-    // --- 描画ヘルパー（グラフィック強化版） ---
+    // --- 描画ヘルパー ---
     function drawFruitShape(ctx, x, y, radius, def) {
-        // 影
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(x + radius*0.15, y + radius*0.15, radius*0.95, 0, Math.PI*2);
-        ctx.fillStyle = def.shadow;
-        ctx.globalAlpha = 0.4;
-        ctx.fill();
-        ctx.globalAlpha = 1.0;
-        ctx.restore();
-        
-        // グラデーション（より立体的に）
-        const grad = ctx.createRadialGradient(
-            x - radius*0.35, y - radius*0.35, radius*0.1,
-            x, y, radius
-        );
-        grad.addColorStop(0, def.highlight);
-        grad.addColorStop(0.6, def.baseColor);
-        grad.addColorStop(1, def.shadow);
-        
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI*2);
-        ctx.fillStyle = grad;
-        ctx.fill();
-        
-        // 外枠（輪郭強調）
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI*2);
-        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-        
-        // ハイライト（光沢）
-        const highlight = ctx.createRadialGradient(
-            x - radius*0.3, y - radius*0.3, 0,
-            x - radius*0.3, y - radius*0.3, radius*0.5
-        );
-        highlight.addColorStop(0, 'rgba(255,255,255,0.8)');
-        highlight.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.beginPath();
-        ctx.arc(x - radius*0.25, y - radius*0.25, radius*0.4, 0, Math.PI*2);
-        ctx.fillStyle = highlight;
-        ctx.fill();
-        
-        // 顔（目と口）
-        ctx.fillStyle = "#1a1a1a";
-        ctx.beginPath();
-        ctx.arc(x - radius*0.25, y - radius*0.1, radius*0.1, 0, Math.PI*2);
-        ctx.arc(x + radius*0.25, y - radius*0.1, radius*0.1, 0, Math.PI*2);
-        ctx.fill();
-        
-        // 笑顔
-        ctx.beginPath();
-        ctx.arc(x, y + radius*0.15, radius*0.2, 0, Math.PI);
-        ctx.lineWidth = radius*0.08;
-        ctx.strokeStyle = "#1a1a1a";
-        ctx.stroke();
+        ctx.beginPath(); ctx.arc(x + radius*0.2, y + radius*0.2, radius*0.9, 0, Math.PI*2);
+        ctx.fillStyle = def.shadow; ctx.fill();
+        const grad = ctx.createRadialGradient(x - radius*0.3, y - radius*0.3, radius*0.1, x, y, radius);
+        grad.addColorStop(0, def.highlight); grad.addColorStop(1, def.baseColor);
+        ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI*2);
+        ctx.fillStyle = grad; ctx.fill();
+        ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI*2);
+        ctx.strokeStyle = 'rgba(0,0,0,0.2)'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.fillStyle = "#333";
+        ctx.beginPath(); ctx.arc(x - radius*0.2, y - radius*0.1, radius*0.08, 0, Math.PI*2);
+        ctx.arc(x + radius*0.2, y - radius*0.1, radius*0.08, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x, y + radius*0.2, radius*0.15, 0, Math.PI);
+        ctx.lineWidth = radius*0.05; ctx.strokeStyle = "#333"; ctx.stroke();
     }
 
     // ヘッダーのNEXT描画（横並び）
     function drawNextRow() {
         nextRowCtx.clearRect(0, 0, nextRowCanvas.width, nextRowCanvas.height);
         
-        const positions = [
-            { x: 35, y: 35, size: 22, label: "NEXT" },
-            { x: 90, y: 35, size: 18, label: "2nd" },
-            { x: 140, y: 35, size: 15, label: "3rd" }
-        ];
-        
-        positions.forEach((pos, i) => {
-            if (i < nextQueue.length) {
-                const f = FRUITS[nextQueue[i]];
-                drawFruitShape(nextRowCtx, pos.x, pos.y, pos.size, f);
-                nextRowCtx.fillStyle = "#333";
-                nextRowCtx.font = "bold 10px Arial";
-                nextRowCtx.textAlign = "center";
-                nextRowCtx.fillText(pos.label, pos.x, 10);
-            }
-        });
+        // Next (一番左・少し大きい)
+        const f1 = FRUITS[nextQueue[0]];
+        drawFruitShape(nextRowCtx, 35, 35, 22, f1);
+        nextRowCtx.fillStyle="#333"; nextRowCtx.font="bold 10px Arial"; nextRowCtx.textAlign="center";
+        nextRowCtx.fillText("NEXT", 35, 10);
+
+        // 2nd
+        const f2 = FRUITS[nextQueue[1]];
+        drawFruitShape(nextRowCtx, 90, 35, 18, f2);
+        nextRowCtx.fillText("2nd", 90, 10);
+
+        // 3rd
+        const f3 = FRUITS[nextQueue[2]];
+        drawFruitShape(nextRowCtx, 140, 35, 15, f3);
+        nextRowCtx.fillText("3rd", 140, 10);
     }
 
-    // フッターの成長ライン描画
+    // フッターのシンカの輪描画（横長キャンバスに円環または直線配置）
+    // スマホの縦画面で円は小さいので、今回は「U字」または「横並び円弧」にして見やすくします
     function drawEvolutionRing(highlightIndex = -1) {
         ringCtx.clearRect(0, 0, ringCanvas.width, ringCanvas.height);
         
         const total = FRUITS.length;
+        // 横一列に少し弧を描いて並べる
         const startX = 25;
         const endX = ringCanvas.width - 25;
         const step = (endX - startX) / (total - 1);
         const yBase = 50;
 
-        // 接続線（グラデーション）
-        const lineGrad = ringCtx.createLinearGradient(startX, 0, endX, 0);
-        lineGrad.addColorStop(0, '#ff9800');
-        lineGrad.addColorStop(0.5, '#ffc107');
-        lineGrad.addColorStop(1, '#ff9800');
-        
+        // 線を描く
         ringCtx.beginPath();
         ringCtx.moveTo(startX, yBase);
         ringCtx.lineTo(endX, yBase);
-        ringCtx.strokeStyle = lineGrad;
-        ringCtx.lineWidth = 5;
+        ringCtx.strokeStyle = '#d4aa7a';
+        ringCtx.lineWidth = 4;
         ringCtx.stroke();
 
         FRUITS.forEach((f, i) => {
@@ -344,38 +235,19 @@
 
             // ハイライト（現在の生成物）
             if (i === highlightIndex) {
-                ringCtx.save();
-                ringCtx.shadowColor = '#ffeb3b';
-                ringCtx.shadowBlur = 20;
-                ringCtx.beginPath();
-                ringCtx.arc(x, y, 18, 0, Math.PI*2);
-                ringCtx.fillStyle = 'rgba(255,235,59,0.6)';
-                ringCtx.fill();
-                ringCtx.restore();
+                ringCtx.beginPath(); ringCtx.arc(x, y, 18, 0, Math.PI*2);
+                ringCtx.fillStyle = 'rgba(255,255,0,0.6)'; ringCtx.fill();
             }
             
             // 次落ちてくるやつ
             if (nextQueue.length > 0 && i === nextQueue[0]) {
-                ringCtx.beginPath();
-                ringCtx.arc(x, y, 16, 0, Math.PI*2);
-                ringCtx.strokeStyle = '#4caf50';
-                ringCtx.lineWidth = 3;
-                ringCtx.stroke();
+                ringCtx.beginPath(); ringCtx.arc(x, y, 16, 0, Math.PI*2);
+                ringCtx.fillStyle = 'rgba(0,255,0,0.3)'; ringCtx.fill();
             }
 
-            // カラフルボール本体
-            const size = 8 + i * 1.2;
-            drawFruitShape(ringCtx, x, y, size, f);
+            // フルーツ本体（小さく）
+            drawFruitShape(ringCtx, x, y, 10 + i * 0.8, f); // ランクが上がると少し大きく表示
         });
-    }
-
-    // スコア更新（アニメーション付き）
-    function updateScore(points) {
-        score += points;
-        const scoreEl = document.getElementById('score');
-        scoreEl.innerText = score;
-        scoreEl.classList.add('score-animate');
-        setTimeout(() => scoreEl.classList.remove('score-animate'), 300);
     }
 
     // --- ゲームロジック ---
@@ -385,16 +257,11 @@
         fillQueue();
         
         drawNextRow();
-        drawEvolutionRing();
+        drawEvolutionRing(); // 次のハイライト更新
 
         const f = FRUITS[index];
-        currentFruit = Bodies.circle(GAME_WIDTH/2, 40, f.radius, {
-            label: index.toString(),
-            isStatic: true,
-            restitution: 0.3,
-            friction: 0.5,
-            density: 0.001,
-            frictionAir: 0.01
+        currentFruit = Bodies.circle(200, 40, f.radius, {
+            label: index.toString(), isStatic: true, restitution: 0.2
         });
         World.add(world, currentFruit);
         isClickable = true;
@@ -404,70 +271,33 @@
         if (!currentFruit || !isClickable || isGameOver) return;
         isClickable = false;
         Matter.Body.setStatic(currentFruit, false);
-        
-        // ドロップ音効果（視覚的フィードバック）
-        const f = FRUITS[parseInt(currentFruit.label)];
-        createParticles(currentFruit.position.x, currentFruit.position.y, f.baseColor, 5);
-        
-        setTimeout(createCurrentFruit, DROP_DELAY);
+        setTimeout(createCurrentFruit, 800);
     }
 
-    // ゲームオーバー判定（改善版 - より正確）
     function checkGameOver() {
         if (isGameOver) return;
-        
         const bodies = Composite.allBodies(world);
-        const now = Date.now();
-        
-        // ライン上のボディをチェック
         for (let body of bodies) {
             if (body.isStatic || body === currentFruit) continue;
-            
-            if (body.position.y - body.circleRadius < GAME_OVER_LINE_Y) {
-                // 初めて検出した時
-                if (!bodiesAboveLine.has(body.id)) {
-                    bodiesAboveLine.set(body.id, now);
-                }
-                // 一定時間以上留まっている場合
-                else if (now - bodiesAboveLine.get(body.id) > GAMEOVER_CHECK_TIME) {
-                    if (body.speed < 0.5) {
-                        triggerGameOver();
-                        return;
-                    }
-                }
-            } else {
-                bodiesAboveLine.delete(body.id);
+            if (body.position.y < GAME_OVER_LINE_Y && body.speed < 0.2) {
+                isGameOver = true;
+                document.getElementById('final-score').innerText = "Score: " + score;
+                document.getElementById('game-over-overlay').style.display = "block";
+                break;
             }
         }
     }
 
-    function triggerGameOver() {
-        isGameOver = true;
-        document.getElementById('final-score').innerText = "Score: " + score;
-        document.getElementById('game-over-overlay').style.display = "block";
-    }
-
-    // 衝突イベント（改善版 - より安定）
     Events.on(engine, 'collisionStart', (event) => {
         if (isGameOver) return;
-        
         event.pairs.forEach(pair => {
             const { bodyA, bodyB } = pair;
-            
-            // 同じカラフルボール同士の衝突判定
             if (bodyA.label && bodyB.label && bodyA.label === bodyB.label) {
-                // 既に処理済みまたは削除予定のボディは無視
                 if (bodyA.isSensor || bodyB.isSensor) return;
-                if (!Composite.get(world, bodyA.id, 'body') || !Composite.get(world, bodyB.id, 'body')) return;
                 
                 const index = parseInt(bodyA.label);
-                
-                // 削除フラグを立てる
-                bodyA.isSensor = true;
-                bodyB.isSensor = true;
-                
-                // ワールドから削除
                 World.remove(world, [bodyA, bodyB]);
+                bodyA.isSensor = true; bodyB.isSensor = true;
                 
                 const mx = (bodyA.position.x + bodyB.position.x) / 2;
                 const my = (bodyA.position.y + bodyB.position.y) / 2;
@@ -475,49 +305,35 @@
                 if (index < FRUITS.length - 1) {
                     const newIndex = index + 1;
                     const f = FRUITS[newIndex];
-                    
-                    // 壁抜け防止（より厳密に）
-                    let sx = mx;
-                    const minX = f.radius + 15;
-                    const maxX = GAME_WIDTH - f.radius - 15;
-                    sx = Math.max(minX, Math.min(maxX, sx));
+                    // 壁抜け補正
+                    let sx = mx; 
+                    if(sx < f.radius+10) sx = f.radius+15;
+                    if(sx > GAME_WIDTH - f.radius - 10) sx = GAME_WIDTH - f.radius - 15;
 
                     const newBody = Bodies.circle(sx, my, f.radius, {
-                        label: newIndex.toString(),
-                        restitution: 0.3,
-                        friction: 0.5,
-                        density: 0.001,
-                        frictionAir: 0.01
+                        label: newIndex.toString(), restitution: 0.2
                     });
                     World.add(world, newBody);
-                    
-                    // エフェクトとスコア
-                    createParticles(mx, my, f.baseColor, 20);
-                    updateScore(f.score);
-                    drawEvolutionRing(newIndex);
+                    score += (index + 1) * 10;
+                    drawEvolutionRing(newIndex); // 進化したフルーツをハイライト
                 } else {
-                    // スイカ完成！
-                    createParticles(mx, my, '#4caf50', 30);
-                    updateScore(500);
+                    score += 500; 
                 }
+                document.getElementById('score').innerText = score;
             }
         });
     });
 
     Events.on(engine, 'afterUpdate', checkGameOver);
 
-    // --- 入力処理（座標変換 + ドロップガイド） ---
+    // --- 入力処理 (座標変換) ---
     function getInternalX(clientX) {
         const rect = canvas.getBoundingClientRect();
-        const scale = GAME_WIDTH / rect.width;
+        const scale = GAME_WIDTH / rect.width; 
         let x = (clientX - rect.left) * scale;
-        
-        if (currentFruit) {
-            const r = currentFruit.circleRadius;
-            const minX = r + 10;
-            const maxX = GAME_WIDTH - r - 10;
-            x = Math.max(minX, Math.min(maxX, x));
-        }
+        const r = currentFruit ? currentFruit.circleRadius : 20;
+        if (x < r + 10) x = r + 10;
+        if (x > GAME_WIDTH - r - 10) x = GAME_WIDTH - r - 10;
         return x;
     }
 
@@ -527,90 +343,41 @@
         Matter.Body.setPosition(currentFruit, { x: x, y: 40 });
     }
 
-    // イベントリスナー
     window.addEventListener('mousemove', (e) => handleInputMove(e.clientX));
     canvas.addEventListener('click', () => dropCurrentFruit());
 
     window.addEventListener('touchmove', (e) => {
-        if (e.touches.length > 0) {
-            e.preventDefault();
-            handleInputMove(e.touches[0].clientX);
-        }
+        if (e.touches.length > 0) handleInputMove(e.touches[0].clientX);
     }, { passive: false });
 
     canvas.addEventListener('touchstart', (e) => {
-        if (e.touches.length > 0) {
-            e.preventDefault();
-            handleInputMove(e.touches[0].clientX);
-        }
+        if (e.touches.length > 0) handleInputMove(e.touches[0].clientX);
     }, { passive: false });
 
-    window.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        dropCurrentFruit();
-    });
+    window.addEventListener('touchend', () => dropCurrentFruit());
 
-    // --- メインループ（改善版） ---
-    let lastTime = Date.now();
-    
+    // --- メインループ ---
     (function renderLoop() {
-        const now = Date.now();
-        const delta = now - lastTime;
-        lastTime = now;
-        
         const bodies = Composite.allBodies(world);
         ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
         // ゲームオーバーライン
         if (!isGameOver) {
-            ctx.save();
-            ctx.beginPath();
-            ctx.moveTo(0, GAME_OVER_LINE_Y);
-            ctx.lineTo(GAME_WIDTH, GAME_OVER_LINE_Y);
-            ctx.strokeStyle = 'rgba(255,82,82,0.6)';
-            ctx.lineWidth = 3;
-            ctx.setLineDash([10, 10]);
-            ctx.stroke();
-            ctx.setLineDash([]);
-            ctx.restore();
-            
-            // ドロップガイド（予測線）
-            if (currentFruit && isClickable) {
-                const x = currentFruit.position.x;
-                
-                ctx.save();
-                ctx.strokeStyle = 'rgba(76,175,80,0.4)';
-                ctx.lineWidth = 2;
-                ctx.setLineDash([5, 5]);
-                ctx.beginPath();
-                ctx.moveTo(x, GAME_OVER_LINE_Y);
-                ctx.lineTo(x, GAME_HEIGHT);
-                ctx.stroke();
-                ctx.setLineDash([]);
-                ctx.restore();
-            }
+            ctx.beginPath(); ctx.moveTo(0, GAME_OVER_LINE_Y); ctx.lineTo(GAME_WIDTH, GAME_OVER_LINE_Y);
+            ctx.strokeStyle = 'rgba(255,0,0,0.4)'; ctx.setLineDash([5, 10]); ctx.stroke(); ctx.setLineDash([]);
         }
 
-        // カラフルボール描画
         bodies.forEach(body => {
             if (body.render.visible === false) return;
             if (body.circleRadius) {
-                const index = parseInt(body.label);
-                const f = FRUITS[index];
-                if (f) {
-                    drawFruitShape(ctx, body.position.x, body.position.y, body.circleRadius, f);
-                }
+                const f = FRUITS[parseInt(body.label)];
+                if (f) drawFruitShape(ctx, body.position.x, body.position.y, body.circleRadius, f);
+            } else {
+                ctx.fillStyle = '#8b4513';
+                ctx.fillRect(body.bounds.min.x, body.bounds.min.y, body.bounds.max.x - body.bounds.min.x, body.bounds.max.y - body.bounds.min.y);
             }
         });
-        
-        // パーティクル更新と描画
-        particles = particles.filter(p => {
-            const alive = p.update();
-            if (alive) p.draw(ctx);
-            return alive;
-        });
-
-        Engine.update(engine, Math.min(delta, 16.67));
+        Engine.update(engine, 1000 / 60);
         requestAnimationFrame(renderLoop);
     })();
 
