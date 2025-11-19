@@ -1,1 +1,1 @@
-(https://snowbellsan.github.io/sudoku/)
+(https://snowbellsan.github.io/Ochimono/)
