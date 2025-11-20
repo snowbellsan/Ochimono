@@ -1,4 +1,4 @@
-# 🍎 おちものぱずる (Ochimon Puzzle)
+#  おちものぱずる (Ochimon Puzzle)
 
 物理演算エンジン Matter.js を使用して作成された、シンプルな落ち物系パズルゲームです。
 
