@@ -40,7 +40,7 @@
 1.  GitHubリポジトリをクローンまたはダウンロードします。
 2.  `index.html` ファイルをブラウザで開きます。
 
-あるいは(https://snowbellsan.github.io/Ochimono/)をブラウザから開きます
+あるいは(https://snowbellsan.github.io/Ochimono/)　をブラウザから開きます
 
     *💡 **注意**： Matter.js の読み込み問題を避けるため、可能であればローカルサーバー（例: VS CodeのLive Server機能）を介して開くことを推奨します。*
 
