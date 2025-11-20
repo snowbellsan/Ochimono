@@ -48,4 +48,3 @@
 
 このプロジェクトは、**[MIT License](LICENSE)** の下で公開されています。詳細については、`LICENSE` ファイルを参照してください。
 
-(https://snowbellsan.github.io/Ochimono/)
