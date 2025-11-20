@@ -7,12 +7,21 @@
     <style>
         /* 全体のリセットとレイアウト設定 */
         html, body {
-            width: 100%; height: 100%; margin: 0; padding: 0;
-            /* overflow-y: scroll; を削除し、コンテンツ全体がスクロール可能になるようにする */
+            width: 100%; min-height: 100%; /* min-heightに変更 */
+            margin: 0; padding: 0;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             font-family: 'Arial', sans-serif;
-            user-select: none; -webkit-user-select: none; touch-action: none;
-            display: flex; flex-direction: column; align-items: center;
+            user-select: none; -webkit-user-select: none; /* touch-action: none; を削除 */
+            /* bodyのflex設定を削除し、コンテンツの自然なスクロールを許可 */
+        }
+
+        /* 外側ラッパーを追加し、コンテンツを中央に配置 */
+        #app-outer-wrapper {
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+            width: 100%; 
+            min-height: 100%; /* bodyのmin-heightと連携 */
         }
         
         @keyframes scorePopup {
@@ -25,14 +34,14 @@
             animation: scorePopup 0.3s ease;
         }
 
-        /* アプリコンテナを画面全体に広げ、コンテンツに応じて高さを調整 */
+        /* アプリコンテナ: スクロールはbodyに任せ、幅を制限 */
         #app-container {
             display: flex; flex-direction: column;
-            width: 100%; min-height: 100%; /* 最小高さを100%に設定 */
+            width: 100%; 
             max-width: 500px;
             box-sizing: border-box;
             padding: 10px 0;
-            overflow-y: auto; /* コンテナ内でのスクロールを許可 */
+            overflow-y: visible; /* スクロールをbodyに任せる */
         }
         
         /* ヘッダーは固定の高さ */
@@ -110,24 +119,25 @@
 </head>
 <body>
 
-<div id="app-container">
-    <div id="ui-header">
-        <div id="score-box">
-            <div id="score-label">SCORE</div>
-            <div id="score">0</div>
+<div id="app-outer-wrapper"> <div id="app-container">
+        <div id="ui-header">
+            <div id="score-box">
+                <div id="score-label">SCORE</div>
+                <div id="score">0</div>
+            </div>
+            <div id="next-box">
+                <canvas id="next-row-canvas" width="180" height="60"></canvas>
+            </div>
         </div>
-        <div id="next-box">
-            <canvas id="next-row-canvas" width="180" height="60"></canvas>
+
+        <div id="canvas-wrapper">
+            <canvas id="world" width="400" height="600"></canvas>
         </div>
-    </div>
 
-    <div id="canvas-wrapper">
-        <canvas id="world" width="400" height="600"></canvas>
-    </div>
-
-    <div id="ui-footer">
-        <div class="footer-label">成長ライン</div>
-        <canvas id="evolution-ring-canvas" width="300" height="80"></canvas>
+        <div id="ui-footer">
+            <div class="footer-label">成長ライン</div>
+            <canvas id="evolution-ring-canvas" width="300" height="80"></canvas>
+        </div>
     </div>
 </div>
 
@@ -154,10 +164,12 @@
     const GAMEOVER_CHECK_TIME = 2000;
     const WALL_THICKNESS = 60;
 
-    // カラフルボール定義（改善版 - より鮮やかな色）
+    // カラフルボール定義（修正版 - 色変更）
     const FRUITS = [
-        { label: 'cherry', radius: 15, baseColor: '#ff1744', highlight: '#ff5252', shadow: '#c51162', score: 10 },
-        { label: 'strawberry', radius: 25, baseColor: '#ff5252', highlight: '#ff8a80', shadow: '#e91e63', score: 20 },
+        // 1st (cherry): 青
+        { label: 'cherry', radius: 15, baseColor: '#2196F3', highlight: '#64B5F6', shadow: '#1565C0', score: 10 }, 
+        // 2nd (strawberry): 水色
+        { label: 'strawberry', radius: 25, baseColor: '#00BCD4', highlight: '#4DD0E1', shadow: '#0097A7', score: 20 },
         { label: 'grape', radius: 35, baseColor: '#9c27b0', highlight: '#ce93d8', shadow: '#6a1b9a', score: 30 },
         { label: 'orange', radius: 45, baseColor: '#ff9800', highlight: '#ffcc80', shadow: '#f57c00', score: 50 },
         { label: 'persimmon', radius: 55, baseColor: '#ff6f00', highlight: '#ffab40', shadow: '#e65100', score: 80 },
