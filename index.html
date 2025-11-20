@@ -20,7 +20,7 @@
             flex-direction: column; 
             align-items: center;
             width: 100%; 
-            min-height: 100vh;
+            min-height: 100vh; /* 画面の高さ分確保 */
         }
         
         @keyframes scorePopup {
@@ -83,11 +83,10 @@
             height: auto;
             aspect-ratio: 2 / 3;
             border: 5px solid #ff9800; border-radius: 20px;
-            /* 背景はJSで描画する水の表現に任せるため、色をシンプルに */
             background: #ffe0b2; 
             box-shadow: 0 8px 20px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.5);
-            /* Matter-jsのCanvasがタッチイベントを受け取るための設定を維持 */
-            touch-action: none;
+            /* ここに touch-action: none; を適用し、キャンバス内でのスクロールを抑制 */
+            touch-action: none; 
         }
 
         /* 成長ライン（フッター） */
@@ -165,7 +164,7 @@
     let waterTime = 0; // 水面アニメーション用変数
 
     // カラフルボール定義（最大ボールを虹色に変更）
-    const FRUITS = [
+    const BALLS = [
         { label: 'blue', radius: 15, baseColor: '#2196F3', highlight: '#64B5F6', shadow: '#1565C0', score: 10 },
         { label: 'skyblue', radius: 25, baseColor: '#00BCD4', highlight: '#4DD0E1', shadow: '#0097A7', score: 20 },
         { label: 'purple', radius: 35, baseColor: '#9c27b0', highlight: '#ce93d8', shadow: '#6a1b9a', score: 30 },
@@ -305,7 +304,7 @@
     }
     
     // --- 描画ヘルパー（グラフィック強化版） ---
-    function drawFruitShape(ctx, x, y, radius, def) {
+    function drawBALLShape(ctx, x, y, radius, def) {
         // 虹色ボール判定
         if (def.label === 'rainbow') {
             drawRainbowFruit(ctx, x, y, radius, rainbowTime);
@@ -382,8 +381,8 @@
         
         positions.forEach((pos, i) => {
             if (i < nextQueue.length) {
-                const f = FRUITS[nextQueue[i]];
-                drawFruitShape(nextRowCtx, pos.x, pos.y, pos.size, f);
+                const f = BALLS[nextQueue[i]];
+                drawBALLShape(nextRowCtx, pos.x, pos.y, pos.size, f);
                 nextRowCtx.fillStyle = "#333";
                 nextRowCtx.font = "bold 10px Arial";
                 nextRowCtx.textAlign = "center";
@@ -396,7 +395,7 @@
     function drawEvolutionRing(highlightIndex = -1) {
         ringCtx.clearRect(0, 0, ringCanvas.width, ringCanvas.height);
         
-        const total = FRUITS.length;
+        const total = BALLS.length;
         const startX = 25;
         const endX = ringCanvas.width - 25;
         const step = (endX - startX) / (total - 1);
@@ -415,7 +414,7 @@
         ringCtx.lineWidth = 5;
         ringCtx.stroke();
 
-        FRUITS.forEach((f, i) => {
+        BALLS.forEach((f, i) => {
             const x = startX + step * i;
             const y = yBase;
 
@@ -442,7 +441,7 @@
 
             // カラフルボール本体
             const size = 8 + i * 1.2;
-            drawFruitShape(ringCtx, x, y, size, f);
+            drawBALLShape(ringCtx, x, y, size, f);
         });
     }
 
@@ -464,7 +463,7 @@
         drawNextRow();
         drawEvolutionRing();
 
-        const f = FRUITS[index];
+        const f = BALLS[index];
         currentFruit = Bodies.circle(GAME_WIDTH/2, 40, f.radius, {
             label: index.toString(),
             isStatic: true,
@@ -483,7 +482,7 @@
         Matter.Body.setStatic(currentFruit, false);
         
         // ドロップ音効果（視覚的フィードバック）
-        const f = FRUITS[parseInt(currentFruit.label)];
+        const f = BALLS[parseInt(currentFruit.label)];
         createParticles(currentFruit.position.x, currentFruit.position.y, f.baseColor, 5);
         
         setTimeout(createCurrentFruit, DROP_DELAY);
@@ -537,7 +536,7 @@
                 if (!Composite.get(world, bodyA.id, 'body') || !Composite.get(world, bodyB.id, 'body')) return;
                 
                 const index = parseInt(bodyA.label);
-                const rainbowIndex = FRUITS.length - 1;
+                const rainbowIndex = BALLS.length - 1;
 
                 // 削除フラグを立てる
                 bodyA.isSensor = true;
@@ -552,7 +551,7 @@
                 if (index < rainbowIndex) {
                     // 通常の進化 (虹色ボール未満)
                     const newIndex = index + 1;
-                    const f = FRUITS[newIndex];
+                    const f = BALLS[newIndex];
                     
                     let sx = mx;
                     const minX = f.radius + 15;
@@ -574,7 +573,7 @@
                     drawEvolutionRing(newIndex);
                 } else {
                     // 虹色ボール同士の対消滅 (Annihilation) ロジック
-                    const annihilationScore = FRUITS[index].score * 5; // 5倍のボーナス (5000点)
+                    const annihilationScore = BALLS[index].score * 5; // 5倍のボーナス (5000点)
                     
                     createParticles(mx, my, '#ffffff', 80); // 閃光
                     createParticles(mx, my, '#ff0000', 40); // 虹色エフェクト
@@ -632,26 +631,34 @@
     // イベントリスナー
     window.addEventListener('load', calculateScaleFactor); 
     
+    // マウス操作は引き続きウィンドウ全体で受け付ける（PCでの操作性維持のため）
     window.addEventListener('mousemove', (e) => handleInputMove(e.clientX));
+    
+    // クリック・タップでのドロップはキャンバス内で実行
     canvas.addEventListener('click', () => dropCurrentFruit());
 
-    window.addEventListener('touchmove', (e) => {
-        if (e.touches.length > 0) {
-            e.preventDefault();
-            handleInputMove(e.touches[0].clientX);
-        }
-    }, { passive: false });
+    // ***** 変更点: タッチ操作をキャンバス内のみに限定 *****
 
+    // touch START: キャンバス内で操作を開始したときにスクロールを防止し、位置を調整
     canvas.addEventListener('touchstart', (e) => {
         if (e.touches.length > 0) {
-            e.preventDefault();
+            e.preventDefault(); 
             handleInputMove(e.touches[0].clientX);
         }
     }, { passive: false });
 
+    // touch MOVE: キャンバス内をドラッグしている間、スクロールを防止し、位置を調整
+    canvas.addEventListener('touchmove', (e) => {
+        if (e.touches.length > 0) {
+            e.preventDefault(); 
+            handleInputMove(e.touches[0].clientX);
+        }
+    }, { passive: false });
+
+    // touch END: ドロップ
     canvas.addEventListener('touchend', (e) => {
-        e.preventDefault();
         dropCurrentFruit();
+        // e.preventDefault() は不要。タッチ終了後の標準動作を妨げない。
     }, { passive: false });
 
 
@@ -716,7 +723,6 @@
 
         // ゲームオーバーライン
         if (!isGameOver) {
-            // ゲームオーバーラインは水面が兼ねるため、破線は描画しない
             
             // ドロップガイド（予測線）
             if (currentFruit && isClickable) {
@@ -741,9 +747,9 @@
             if (body.render.visible === false) return;
             if (body.circleRadius) {
                 const index = parseInt(body.label);
-                const f = FRUITS[index];
+                const f = BALLS[index];
                 if (f) {
-                    drawFruitShape(ctx, body.position.x, body.position.y, body.circleRadius, f);
+                    drawBALLShape(ctx, body.position.x, body.position.y, body.circleRadius, f);
                 }
             }
         });
