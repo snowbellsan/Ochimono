@@ -158,6 +158,16 @@
     const DROP_DELAY = 800;
     const GAMEOVER_CHECK_TIME = 2000;
     const WALL_THICKNESS = 60;
+	
+	// 🎵 BGM読み込み＆ループ設定
+    const bgm = new Audio("assets/for_Life.mp3");
+    bgm.loop = true;
+    bgm.volume = 0.3; // お好みで♪
+	
+	// 🎵 合体音
+    const seMerge = new Audio("assets/ぱっ.mp3");
+    seMerge.volume = 0.9;
+
 
     // 虹色アニメーション用および水面アニメーション用のグローバルタイマー
     let rainbowTime = 0; 
@@ -571,6 +581,10 @@
                     createParticles(mx, my, f.baseColor, 20);
                     updateScore(f.score);
                     drawEvolutionRing(newIndex);
+					
+					// ★ 効果音を鳴らす
+                    seMerge.currentTime = 0; // 連続再生用リセット
+                    seMerge.play();
                 } else {
                     // 虹色ボール同士の対消滅 (Annihilation) ロジック
                     const annihilationScore = BALLS[index].score * 5; // 5倍のボーナス (5000点)
@@ -764,6 +778,12 @@
         Engine.update(engine, Math.min(delta, 16.67));
         requestAnimationFrame(renderLoop);
     })();
+	
+	// 🔊 初回タップでBGM開始（自動再生ブロック対策）
+    window.addEventListener("pointerdown", () => {
+    bgm.play().catch(() => {});
+    }, { once: true });
+
 
     // 初期実行
     fillQueue();
